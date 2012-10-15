@@ -1,0 +1,12 @@
+Package: DelayActivation
+Type: Package
+Title: A classification method for time course microarray data
+Version: 0.2
+Date: 2012-4-19
+Author: Xing Qiu, Hulin Wu, Shuang Wu
+Maintainer: Xing Qiu <xqiu@bst.rochester.edu>
+Description: This package provides a set of tools to determine whether a gene has delayed activation or not, and when the activation starts, etc.  These criteria can serve as an alternative to model based cluster analysis such as those provided by \pkg{circlust}.  Four criteria are implemented in this package: 1. regular/delay genes; 2. number of modes (local min/max); 3. activation time; 4. up/down regulation.  So far I think it is only good for internal use.  A report \file{delay\_activation2.pdf} is distributed with this package.
+Depends: R (>= 2.9.0), fda, abind
+Suggests: circlust
+License: GPL (>=2)
+LazyLoad: yes
