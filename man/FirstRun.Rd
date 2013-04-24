@@ -40,11 +40,14 @@
 \details{ Please see the documentation of \code{DelayDetect},
   \code{ModesDetect}, and \code{ActivationDetect} for more details.}
 
-\value{ A list of three components
-  \item{fittded.curves}{A functional data (fd) object of smoothed gene
-    expression (as functions of time) produced by function
-    \code{smooth.basis()} from package \pkg{fda}.}
-
+\value{ A list of these components
+  \item{fittded.curves}{Smoothed curves of each gene. It is a functional
+    data (fd) object of smoothed gene expression (as functions of time)
+    produced by function \code{smooth.basis()} from package \pkg{fda}.}
+  \item{meancurs}{Smoothed mean curves of each cluster. It is a
+    functional data (fd) object of smoothed gene expression (as
+    functions of time) produced by function \code{smooth.basis()} from
+    package \pkg{fda}.}
   \item{clust.info}{A data frame containing the results obtained from
     \code{\link{DelayDetect}}, \code{\link{ModesDetect}},
     \code{\link{ActivationDetect}}}.  An additional column,

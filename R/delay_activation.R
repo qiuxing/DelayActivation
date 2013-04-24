@@ -119,6 +119,34 @@ ActivationDetect <- function(x.smoothed, Time, Q=0.5){
 }
 
 
+.actperiod <- function(v, Time, Q=0.5){
+  vmin <- min(v); vmax <- max(v)
+  if (vmax>=abs(vmin)) {                #global maximum
+    vsign <- 1
+    act.period.ind <- v > Q*vmax
+  } else {                              #looking for minimum instead
+    vsign <- -1
+    act.period.ind <- v < Q*vmin
+  }
+  return(list("vsign"=vsign, "ActPeriod.Index"=act.period.ind))
+}
+
+ActivationPeriodDetect <- function(x.smoothed, Time, Q=0.5){
+  ## reports a period of activation instead of just the first day
+  genenames <- rownames(x.smoothed)
+  x.smoothed0 <- sweep(x.smoothed, MARGIN=1, x.smoothed[,1], "-")
+  UpDown <- c()
+  actperiod.days <- matrix(0, nrow=length(genenames), ncol=length(Time))
+  rownames(actperiod.days) <- genenames
+  colnames(actperiod.days) <- paste("Day",Time,sep="")
+  for (gg in genenames){
+    rr <- .actperiod(x.smoothed0[gg,], Time=Time, Q=Q)
+    UpDown[gg] <- ifelse(rr[["vsign"]]==1, "Up", "Down")
+    actperiod.days[gg,] <- rr[["ActPeriod.Index"]]
+  }
+  return(data.frame(UpDown, actperiod.days))
+}
+
 FirstRun <- function(x, Time, smoothing.par, delay.min=3, delay.max=5, beta1.cut=0.15, se.adj.cut=0.12, t.cut=3.0, delta=0.1, Q=0.5){
   ## A convenient wrapper to do the first run in one step
   fitted.curves <- smooth.basis(Time, t(x), smoothing.par)[["fd"]]
@@ -142,7 +170,16 @@ FirstRun <- function(x, Time, smoothing.par, delay.min=3, delay.max=5, beta1.cut
                  beta1.cut=beta1.cut, se.adj.cut=se.adj.cut,
                  t.cut=t.cut, delta=delta, Q=Q)
 
+  ## Compute the mean curves
+  meancurs <- NULL
+  cnames <- sort(unique(Clust))
+  for (clust in cnames){
+    cl.k <- which(Clust==clust)
+    meancurs[[clust]] <- mean.fd(fitted.curves[cl.k])
+  }
+
   return(list(fitted.curves=fitted.curves,
+              meancurs=meancurs,
               clust.info=clust.info,
               params=params))
 }
@@ -212,12 +249,13 @@ PostProc <- function(firstrun.info, manual.delay=NULL,
                  ActDay, Modes, sep=".")
   cnames <- sort(unique(Clust))
   csize <- sapply(cnames, function(cn) sum(Clust==cn))
-  ## Compute the original mean curves
+  ## since we may have manually selected delay/regular genes and merged some modes groups, we have to re-compute the mean curves
   meancurs <- NULL
   for (clust in cnames){
     cl.k <- which(Clust==clust)
     meancurs[[clust]] <- mean.fd(fitted.curves[cl.k])
   }
+
   ## Now if such a cluster has less than cluster.min number of genes,
   ## it will be merged to the "nearest" cluster determined by L2
   ## distance
@@ -242,7 +280,16 @@ PostProc <- function(firstrun.info, manual.delay=NULL,
   ##                           Clust=Clust2)
   rownames(clust.info2) <- genenames
 
+  ## Re-compute the new mean curves to reflect merges
+  meancurs <- NULL
+  cnames <- sort(unique(Clust2))
+  for (clust in cnames){
+    cl.k <- which(Clust2==clust)
+    meancurs[[clust]] <- mean.fd(fitted.curves[cl.k])
+  }
+
   return(list(fitted.curves=fitted.curves,
+              meancurs=meancurs,
               clust.info=clust.info2,
               params=params))
 }
